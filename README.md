@@ -2,7 +2,7 @@
 
 Internal market-report application for generating and emailing a daily HTML summary of financial market activity.
 
-The current implementation is still based on the legacy notebook in the project root. The target implementation will move the report logic into importable Python modules, run as a containerized internal web app, store report settings in local storage, and read credentials from Vault.
+The current implementation is being migrated from the legacy notebook in the project root. The report runner now has an importable Python package and CLI entry point. The target implementation will run as a containerized internal web app, store report settings in local storage, and read credentials from Vault.
 
 ## Local Layout
 
@@ -19,3 +19,17 @@ The current implementation is still based on the legacy notebook in the project 
 Do not commit API keys, Gmail app passwords, Vault tokens, or generated reports.
 
 The planned runtime secret source is Vault at `VAULT_SECRET_PATH`. `.env.example` documents the variable names only.
+
+## CLI
+
+The extracted runner exposes a command:
+
+```bash
+financial-market-report run --no-email
+```
+
+Required runtime secrets are read from environment variables or mounted files under `/run/secrets`:
+
+- `FMP_API_KEY`
+- `NEWS_API_KEY` when news is enabled
+- `SENDER_EMAIL`, `TARGET_EMAIL`, and `GMAIL_APP_PASSWORD` when email sending is enabled
