@@ -36,8 +36,16 @@ python3 -m venv .venv
 APP_SECRETS_DIR=secrets scripts/run_report.sh --no-email --no-news --no-plots
 ```
 
+Inspect the local run database:
+
+```bash
+financial-market-report runs
+```
+
 Required runtime secrets are read from environment variables or mounted files under `/run/secrets`:
 
 - `FMP_API_KEY`
 - `NEWS_API_KEY` when news is enabled
 - `SENDER_EMAIL`, `TARGET_EMAIL`, and `GMAIL_APP_PASSWORD` when email sending is enabled
+
+By default, run metadata is stored in `data/financial_market_report.sqlite3`.
