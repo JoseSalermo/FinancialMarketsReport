@@ -17,7 +17,11 @@ def search_news_to_df(ticker: str, api_key: str, page_size: int, *, timeout: int
         "sortBy": "publishedAt",
         "pageSize": page_size,
     }
-    response = requests.get(NEWS_API_URL, params=params, timeout=timeout)
+    try:
+        response = requests.get(NEWS_API_URL, params=params, timeout=timeout)
+    except requests.exceptions.RequestException:
+        return pd.DataFrame()
+
     if response.status_code != 200:
         return pd.DataFrame()
 

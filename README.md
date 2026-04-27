@@ -28,6 +28,14 @@ The extracted runner exposes a command:
 financial-market-report run --no-email
 ```
 
+For local development:
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -e .
+APP_SECRETS_DIR=secrets scripts/run_report.sh --no-email --no-news --no-plots
+```
+
 Required runtime secrets are read from environment variables or mounted files under `/run/secrets`:
 
 - `FMP_API_KEY`
