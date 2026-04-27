@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+venv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Local secrets and environment
+.env
+*.env
+secrets/*
+!secrets/.gitkeep
+
+# Local runtime data
+data/*
+!data/.gitkeep
+reports/*
+!reports/.gitkeep
+logs/*
+!logs/.gitkeep
+*.sqlite
+*.sqlite3
+
+# Generated notebook/report artifacts
+*.nbconvert.ipynb
+Outputs/
+
+# Keep the current notebook out of Git until it is sanitized.
+FinMarketsNotebook.ipynb
+notebooks/legacy/*.ipynb

@@ -1,0 +1,23 @@
+report:
+  max_tickers: 50
+  price_of_interest: 30
+  lowest_price: 7
+  daily_volume: 1000000
+  price_change: 0.5
+  dates_days_interest: 30
+  news_days_interest: 3
+  news_page_size: 5
+  num_news: 5
+  timezone: America/Toronto
+  get_news: true
+  get_plots: true
+  send_email: false
+
+schedule:
+  enabled: false
+  run_time: "04:00"
+
+email:
+  smtp_host: smtp.gmail.com
+  smtp_port: 465
+  use_ssl: true

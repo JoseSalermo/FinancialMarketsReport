@@ -1,0 +1,1 @@
+"""Financial market report application."""
