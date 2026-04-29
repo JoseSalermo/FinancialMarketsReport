@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+import json
+from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping
 
 import yaml
 
@@ -67,6 +68,59 @@ def _section(data: dict[str, Any], name: str) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise ValueError(f"Config section '{name}' must be a mapping")
     return value
+
+
+def _decode_override_value(value: Any) -> Any:
+    if not isinstance(value, str):
+        return value
+    try:
+        return json.loads(value)
+    except json.JSONDecodeError:
+        return value
+
+
+def _coerce_override_value(value: Any, default: Any) -> Any:
+    if value is None:
+        return default
+    if isinstance(default, bool):
+        if isinstance(value, str):
+            return value.strip().lower() in {"1", "true", "yes", "on"}
+        return bool(value)
+    if isinstance(default, int) and not isinstance(default, bool):
+        return int(value)
+    if isinstance(default, float):
+        return float(value)
+    if isinstance(default, str):
+        return str(value)
+    return value
+
+
+def apply_settings_overrides(config: AppConfig, flat_settings: Mapping[str, Any]) -> AppConfig:
+    report = asdict(config.report)
+    schedule = asdict(config.schedule)
+    email = asdict(config.email)
+    sections = {
+        "report": report,
+        "schedule": schedule,
+        "email": email,
+    }
+
+    for key, raw_value in flat_settings.items():
+        section_name, separator, field_name = key.partition(".")
+        if not separator:
+            continue
+        section = sections.get(section_name)
+        if section is None or field_name not in section:
+            continue
+
+        value = _decode_override_value(raw_value)
+        section[field_name] = _coerce_override_value(value, section[field_name])
+
+    return AppConfig(
+        report=ReportSettings(**report),
+        schedule=ScheduleSettings(**schedule),
+        email=EmailSettings(**email),
+    )
 
 
 def load_config(path: str | Path | None = None) -> AppConfig:

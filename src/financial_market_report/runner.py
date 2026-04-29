@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import asdict
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -9,7 +8,7 @@ from zoneinfo import ZoneInfo
 import pandas as pd
 
 from financial_market_report.analysis.filters import add_volume_filter, build_interest_table
-from financial_market_report.config import PROJECT_ROOT, AppConfig, load_config
+from financial_market_report.config import PROJECT_ROOT, AppConfig, apply_settings_overrides, load_config
 from financial_market_report.emailer.smtp import send_html_email_with_attachment
 from financial_market_report.market_data.fmp import fetch_market_movers
 from financial_market_report.reporting.renderer import render_report_html, write_report_html
@@ -17,6 +16,7 @@ from financial_market_report.secrets import read_secret
 from financial_market_report.storage.repository import (
     create_report_run,
     finish_report_run,
+    get_settings,
     record_report,
     replace_news_articles,
     replace_ticker_candidates,
@@ -59,6 +59,8 @@ def run_report(
     get_plots_override: bool | None = None,
 ) -> ReportRunResult:
     config: AppConfig = load_config(config_path)
+    if db_path is not None:
+        config = apply_settings_overrides(config, get_settings(db_path))
     settings = config.report
 
     get_news = settings.get_news if get_news_override is None else get_news_override

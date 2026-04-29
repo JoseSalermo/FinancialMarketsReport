@@ -55,6 +55,8 @@ Start the internal web app:
 financial-market-report serve --host 0.0.0.0 --port 8080
 ```
 
+The settings page stores report and schedule values in SQLite. Runs started by the web app, or CLI runs that pass the same `--db-path`, apply those SQLite values on top of `config/defaults.yaml`.
+
 Required runtime secrets are read from environment variables or mounted files under `/run/secrets`:
 
 - `FMP_API_KEY`

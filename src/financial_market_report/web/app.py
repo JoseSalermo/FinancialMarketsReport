@@ -157,7 +157,7 @@ def create_app(*, db_path: str | Path | None = None) -> Flask:
                 else:
                     values[key] = raw
         update_settings(app.config["DB_PATH"], values)
-        flash("Settings saved to SQLite. Runner config-file overrides are not wired yet.")
+        flash("Settings saved. Future web and CLI runs with this database will use these values.")
         return redirect(url_for("settings"))
 
     @app.get("/secrets")
