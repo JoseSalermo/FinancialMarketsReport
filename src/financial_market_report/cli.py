@@ -26,6 +26,13 @@ def build_parser() -> argparse.ArgumentParser:
     runs_parser.add_argument("--db-path", type=Path, default=None, help="Path to SQLite database")
     runs_parser.add_argument("--limit", type=int, default=10, help="Number of runs to show")
 
+    secrets_parser = subparsers.add_parser("secrets-status", help="Show configured secret availability")
+    secrets_parser.add_argument(
+        "--include-email",
+        action="store_true",
+        help="Include email delivery secrets in the status check",
+    )
+
     return parser
 
 
@@ -79,6 +86,23 @@ def main(argv: list[str] | None = None) -> int:
             )
             if row["error_message"]:
                 print(f"  error={row['error_message']}")
+        return 0
+
+    if args.command == "secrets-status":
+        from financial_market_report.secrets import clear_secret_cache, secret_status, vault_error
+        from financial_market_report.vault import load_vault_config
+
+        names = ["FMP_API_KEY", "NEWS_API_KEY"]
+        if args.include_email:
+            names.extend(["SENDER_EMAIL", "TARGET_EMAIL", "GMAIL_APP_PASSWORD"])
+
+        clear_secret_cache()
+        config = load_vault_config()
+        print(f"Vault configured: {config is not None}")
+        for name, configured in secret_status(names).items():
+            print(f"{name}: {'configured' if configured else 'missing'}")
+        if vault_error():
+            print(f"Vault error: {vault_error()}")
         return 0
 
     parser.error(f"Unsupported command: {args.command}")

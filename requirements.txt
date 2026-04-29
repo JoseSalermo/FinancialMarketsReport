@@ -19,6 +19,7 @@ fastjsonschema==2.21.2
 fonttools==4.55.3
 frozendict==2.4.6
 html5lib==1.1
+hvac>=2.3
 idna==3.10
 ipykernel==6.29.5
 ipython==8.28.0
