@@ -57,6 +57,7 @@ def run_report(
     send_email_override: bool | None = None,
     get_news_override: bool | None = None,
     get_plots_override: bool | None = None,
+    trigger: str = "cli",
 ) -> ReportRunResult:
     config: AppConfig = load_config(config_path)
     if db_path is not None:
@@ -81,6 +82,7 @@ def run_report(
             "send_email": send_email,
             "get_news": get_news,
             "get_plots": get_plots,
+            "trigger": trigger,
         },
     }
     save_settings_snapshot(db_path, settings=config, updated_at=generated_at)

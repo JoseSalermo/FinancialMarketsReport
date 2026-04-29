@@ -109,6 +109,13 @@ button:hover {
   text-decoration: none;
 }
 
+button:disabled {
+  border-color: var(--line);
+  background: #cbd5df;
+  color: #52616f;
+  cursor: not-allowed;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;

@@ -38,6 +38,13 @@ def build_parser() -> argparse.ArgumentParser:
     serve_parser.add_argument("--port", type=int, default=8080, help="Port to listen on")
     serve_parser.add_argument("--db-path", type=Path, default=None, help="Path to SQLite database")
     serve_parser.add_argument("--debug", action="store_true", help="Enable Flask debug mode")
+    serve_parser.add_argument("--no-scheduler", action="store_true", help="Disable the background scheduler")
+    serve_parser.add_argument(
+        "--scheduler-interval-seconds",
+        type=int,
+        default=60,
+        help="How often the background scheduler checks settings",
+    )
 
     return parser
 
@@ -114,7 +121,14 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "serve":
         from financial_market_report.web.app import run_dev_server
 
-        run_dev_server(host=args.host, port=args.port, db_path=args.db_path, debug=args.debug)
+        run_dev_server(
+            host=args.host,
+            port=args.port,
+            db_path=args.db_path,
+            debug=args.debug,
+            enable_scheduler=not args.no_scheduler,
+            scheduler_interval_seconds=args.scheduler_interval_seconds,
+        )
         return 0
 
     parser.error(f"Unsupported command: {args.command}")

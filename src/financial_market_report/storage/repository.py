@@ -234,6 +234,46 @@ def get_latest_report_run(db_path: str | Path | None) -> sqlite3.Row | None:
     return rows[0] if rows else None
 
 
+def get_running_report_run(db_path: str | Path | None) -> sqlite3.Row | None:
+    init_db(db_path)
+    with connect(db_path) as conn:
+        return conn.execute(
+            """
+            SELECT id,
+                   started_at,
+                   status,
+                   params_json
+            FROM report_runs
+            WHERE status = 'running'
+            ORDER BY id DESC
+            LIMIT 1
+            """,
+        ).fetchone()
+
+
+def scheduled_run_exists(db_path: str | Path | None, *, run_date: str, trigger: str = "schedule") -> bool:
+    init_db(db_path)
+    with connect(db_path) as conn:
+        rows = conn.execute(
+            """
+            SELECT params_json
+            FROM report_runs
+            WHERE started_at LIKE ?
+            ORDER BY id DESC
+            """,
+            (f"{run_date}%",),
+        )
+        for row in rows:
+            try:
+                params = json.loads(row["params_json"])
+            except json.JSONDecodeError:
+                continue
+            runtime = params.get("runtime", {})
+            if isinstance(runtime, dict) and runtime.get("trigger") == trigger:
+                return True
+    return False
+
+
 def get_report_run(db_path: str | Path | None, run_id: int) -> sqlite3.Row | None:
     init_db(db_path)
     with connect(db_path) as conn:

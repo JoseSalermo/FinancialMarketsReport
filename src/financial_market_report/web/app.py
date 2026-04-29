@@ -9,11 +9,13 @@ from flask import Flask, abort, flash, redirect, render_template, request, send_
 
 from financial_market_report.config import DEFAULT_CONFIG_PATH, PROJECT_ROOT, load_config
 from financial_market_report.runner import run_report
+from financial_market_report.scheduler import ReportScheduler
 from financial_market_report.secrets import clear_secret_cache, secret_status, vault_error
 from financial_market_report.storage.db import DEFAULT_DB_PATH, init_db
 from financial_market_report.storage.repository import (
     get_latest_report_run,
     get_report_run,
+    get_running_report_run,
     get_settings,
     list_report_runs,
     list_reports,
@@ -85,8 +87,17 @@ def create_app(*, db_path: str | Path | None = None) -> Flask:
     @app.get("/")
     def dashboard():
         latest_run = get_latest_report_run(app.config["DB_PATH"])
+        running_run = get_running_report_run(app.config["DB_PATH"])
         reports = list_reports(app.config["DB_PATH"], limit=5)
-        return render_template("dashboard.html", latest_run=latest_run, reports=reports)
+        scheduler = app.config.get("SCHEDULER")
+        scheduler_status = scheduler.status() if scheduler else None
+        return render_template(
+            "dashboard.html",
+            latest_run=latest_run,
+            reports=reports,
+            running_run=running_run,
+            scheduler_status=scheduler_status,
+        )
 
     @app.get("/runs")
     def runs():
@@ -103,8 +114,18 @@ def create_app(*, db_path: str | Path | None = None) -> Flask:
 
     @app.post("/runs")
     def run_now():
+        running_run = get_running_report_run(app.config["DB_PATH"])
+        if running_run is not None:
+            flash(f"Run #{running_run['id']} is already running.")
+            return redirect(url_for("runs"))
+
+        db_path = app.config["DB_PATH"]
+
         def target() -> None:
-            run_report(db_path=app.config["DB_PATH"])
+            try:
+                run_report(db_path=db_path, trigger="web")
+            except Exception:
+                app.logger.exception("Manual report run failed")
 
         threading.Thread(target=target, daemon=True).start()
         flash("Report run started. Refresh run history to see progress.")
@@ -174,6 +195,24 @@ def create_app(*, db_path: str | Path | None = None) -> Flask:
     return app
 
 
-def run_dev_server(*, host: str, port: int, db_path: str | Path | None = None, debug: bool = False) -> None:
+def run_dev_server(
+    *,
+    host: str,
+    port: int,
+    db_path: str | Path | None = None,
+    debug: bool = False,
+    enable_scheduler: bool = True,
+    scheduler_interval_seconds: int = 60,
+) -> None:
     app = create_app(db_path=db_path)
-    app.run(host=host, port=port, debug=debug)
+    scheduler: ReportScheduler | None = None
+    if enable_scheduler:
+        scheduler = ReportScheduler(db_path=app.config["DB_PATH"], interval_seconds=scheduler_interval_seconds)
+        app.config["SCHEDULER"] = scheduler
+        scheduler.start()
+
+    try:
+        app.run(host=host, port=port, debug=debug, use_reloader=False)
+    finally:
+        if scheduler is not None:
+            scheduler.stop()

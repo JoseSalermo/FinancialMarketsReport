@@ -7,8 +7,27 @@
     <p class="muted">Current run state and latest generated reports.</p>
   </div>
   <form method="post" action="{{ url_for('run_now') }}">
-    <button type="submit">Run Now</button>
+    <button type="submit" {% if running_run %}disabled{% endif %}>Run Now</button>
   </form>
+</section>
+
+<section class="panel">
+  <h2>Scheduler</h2>
+  {% if scheduler_status %}
+    <dl class="stats">
+      <div><dt>State</dt><dd>{{ "enabled" if scheduler_status.enabled else "disabled" }}</dd></div>
+      <div><dt>Thread</dt><dd>{{ "running" if scheduler_status.thread_alive else "stopped" }}</dd></div>
+      <div><dt>Run Time</dt><dd>{{ scheduler_status.run_time or "-" }}</dd></div>
+      <div><dt>Timezone</dt><dd>{{ scheduler_status.timezone or "-" }}</dd></div>
+      <div><dt>Next Run</dt><dd>{{ scheduler_status.next_run_at or "-" }}</dd></div>
+      <div><dt>Last Check</dt><dd>{{ scheduler_status.last_checked_at or "-" }}</dd></div>
+    </dl>
+    {% if scheduler_status.last_error %}
+      <pre class="error">{{ scheduler_status.last_error }}</pre>
+    {% endif %}
+  {% else %}
+    <p class="muted">Scheduler is not running for this web process.</p>
+  {% endif %}
 </section>
 
 <section class="panel">
