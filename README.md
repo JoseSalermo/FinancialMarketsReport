@@ -49,6 +49,12 @@ Check whether secrets are available without printing their values:
 financial-market-report secrets-status --include-email
 ```
 
+Start the internal web app:
+
+```bash
+financial-market-report serve --host 0.0.0.0 --port 8080
+```
+
 Required runtime secrets are read from environment variables or mounted files under `/run/secrets`:
 
 - `FMP_API_KEY`

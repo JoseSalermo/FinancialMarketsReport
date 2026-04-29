@@ -74,6 +74,31 @@ def save_settings_snapshot(db_path: str | Path | None, *, settings: Any, updated
         )
 
 
+def get_settings(db_path: str | Path | None) -> dict[str, str]:
+    init_db(db_path)
+    with connect(db_path) as conn:
+        return {
+            row["key"]: row["value"]
+            for row in conn.execute("SELECT key, value FROM settings ORDER BY key")
+        }
+
+
+def update_settings(db_path: str | Path | None, values: dict[str, Any]) -> None:
+    init_db(db_path)
+    updated_at = utc_now_iso()
+    with connect(db_path) as conn:
+        conn.executemany(
+            """
+            INSERT INTO settings (key, value, updated_at)
+            VALUES (?, ?, ?)
+            ON CONFLICT(key) DO UPDATE SET
+                value = excluded.value,
+                updated_at = excluded.updated_at
+            """,
+            [(key, to_json(value), updated_at) for key, value in values.items()],
+        )
+
+
 def finish_report_run(
     db_path: str | Path | None,
     *,
@@ -197,6 +222,82 @@ def list_report_runs(db_path: str | Path | None, *, limit: int = 10) -> list[sql
                 FROM report_runs rr
                 LEFT JOIN reports r ON r.run_id = rr.id
                 ORDER BY rr.id DESC
+                LIMIT ?
+                """,
+                (limit,),
+            )
+        )
+
+
+def get_latest_report_run(db_path: str | Path | None) -> sqlite3.Row | None:
+    rows = list_report_runs(db_path, limit=1)
+    return rows[0] if rows else None
+
+
+def get_report_run(db_path: str | Path | None, run_id: int) -> sqlite3.Row | None:
+    init_db(db_path)
+    with connect(db_path) as conn:
+        return conn.execute(
+            """
+            SELECT rr.id,
+                   rr.started_at,
+                   rr.finished_at,
+                   rr.status,
+                   rr.params_json,
+                   rr.error_message,
+                   rr.ticker_count,
+                   rr.email_sent,
+                   r.html_path,
+                   r.email_status,
+                   r.email_sent_at,
+                   r.report_date
+            FROM report_runs rr
+            LEFT JOIN reports r ON r.run_id = rr.id
+            WHERE rr.id = ?
+            """,
+            (run_id,),
+        ).fetchone()
+
+
+def list_ticker_candidates(db_path: str | Path | None, *, run_id: int) -> list[sqlite3.Row]:
+    init_db(db_path)
+    with connect(db_path) as conn:
+        return list(
+            conn.execute(
+                """
+                SELECT symbol,
+                       source,
+                       price,
+                       change_value,
+                       changes_percentage,
+                       volume,
+                       company_name
+                FROM ticker_candidates
+                WHERE run_id = ?
+                ORDER BY source, symbol
+                """,
+                (run_id,),
+            )
+        )
+
+
+def list_reports(db_path: str | Path | None, *, limit: int = 25) -> list[sqlite3.Row]:
+    init_db(db_path)
+    with connect(db_path) as conn:
+        return list(
+            conn.execute(
+                """
+                SELECT r.id,
+                       r.run_id,
+                       r.report_date,
+                       r.html_path,
+                       r.email_status,
+                       rr.status,
+                       rr.started_at,
+                       rr.ticker_count
+                FROM reports r
+                JOIN report_runs rr ON rr.id = r.run_id
+                ORDER BY r.id DESC
                 LIMIT ?
                 """,
                 (limit,),

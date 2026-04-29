@@ -33,6 +33,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Include email delivery secrets in the status check",
     )
 
+    serve_parser = subparsers.add_parser("serve", help="Start the internal web app")
+    serve_parser.add_argument("--host", default="127.0.0.1", help="Host interface to bind")
+    serve_parser.add_argument("--port", type=int, default=8080, help="Port to listen on")
+    serve_parser.add_argument("--db-path", type=Path, default=None, help="Path to SQLite database")
+    serve_parser.add_argument("--debug", action="store_true", help="Enable Flask debug mode")
+
     return parser
 
 
@@ -103,6 +109,12 @@ def main(argv: list[str] | None = None) -> int:
             print(f"{name}: {'configured' if configured else 'missing'}")
         if vault_error():
             print(f"Vault error: {vault_error()}")
+        return 0
+
+    if args.command == "serve":
+        from financial_market_report.web.app import run_dev_server
+
+        run_dev_server(host=args.host, port=args.port, db_path=args.db_path, debug=args.debug)
         return 0
 
     parser.error(f"Unsupported command: {args.command}")
