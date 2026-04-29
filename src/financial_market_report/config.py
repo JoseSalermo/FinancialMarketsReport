@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Mapping
@@ -8,7 +9,14 @@ from typing import Any, Mapping
 import yaml
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
+def _project_root() -> Path:
+    configured = os.environ.get("FINANCIAL_MARKET_REPORT_HOME")
+    if configured:
+        return Path(configured).expanduser().resolve()
+    return Path(__file__).resolve().parents[2]
+
+
+PROJECT_ROOT = _project_root()
 DEFAULT_CONFIG_PATH = PROJECT_ROOT / "config" / "defaults.yaml"
 
 
