@@ -78,6 +78,25 @@ def _default_settings_map() -> dict[str, Any]:
     }
 
 
+def _resolve_report_path(stored_path: str) -> Path | None:
+    path = Path(stored_path)
+    if path.exists():
+        return path
+
+    if not path.is_absolute():
+        candidate = PROJECT_ROOT / path
+        if candidate.exists():
+            return candidate
+
+    if "reports" in path.parts:
+        reports_index = path.parts.index("reports")
+        candidate = PROJECT_ROOT.joinpath(*path.parts[reports_index:])
+        if candidate.exists():
+            return candidate
+
+    return None
+
+
 def create_app(*, db_path: str | Path | None = None) -> Flask:
     app = Flask(__name__)
     app.secret_key = "local-dev-change-me"
@@ -141,8 +160,8 @@ def create_app(*, db_path: str | Path | None = None) -> Flask:
         run = get_report_run(app.config["DB_PATH"], run_id)
         if run is None or not run["html_path"]:
             abort(404)
-        path = Path(run["html_path"])
-        if not path.exists():
+        path = _resolve_report_path(run["html_path"])
+        if path is None:
             abort(404)
         return send_file(path)
 
