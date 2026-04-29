@@ -10,7 +10,7 @@ services:
     environment:
       FINANCIAL_MARKET_REPORT_HOME: /app
       APP_SECRETS_DIR: /run/secrets
-      VAULT_ADDR: ${VAULT_ADDR:-}
+      VAULT_ADDR: ${VAULT_ADDR:-http://vault:8200}
       VAULT_TOKEN: ${VAULT_TOKEN:-}
       VAULT_SECRET_PATH: ${VAULT_SECRET_PATH:-secret/data/financial-market-report}
       VAULT_NAMESPACE: ${VAULT_NAMESPACE:-}
@@ -30,3 +30,10 @@ services:
       interval: 1m
       timeout: 10s
       retries: 3
+    networks:
+      - homelab
+
+networks:
+  homelab:
+    external: true
+    name: ${HOMELAB_DOCKER_NETWORK:-homelab}

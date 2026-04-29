@@ -18,8 +18,8 @@ The current implementation is being migrated from the legacy notebook in the pro
 
 Do not commit API keys, Gmail app passwords, Vault tokens, or generated reports.
 
-The planned runtime secret source is Vault at `VAULT_SECRET_PATH`. `.env.example` documents the variable names only.
-For local Vault development, see [docs/vault.md](docs/vault.md).
+The runtime secret source is the shared HomelabInfra Vault service at `VAULT_SECRET_PATH`. `.env.example` documents the variable names only.
+For app-side Vault connection details, see [docs/vault.md](docs/vault.md).
 
 ## CLI
 
