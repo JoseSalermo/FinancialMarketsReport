@@ -2,14 +2,26 @@ from __future__ import annotations
 
 from html import escape
 from pathlib import Path
+from typing import Literal
 
 import pandas as pd
+
+
+ImageSrcMode = Literal["relative", "cid"]
 
 
 def dataframe_to_html(df: pd.DataFrame, *, escape_html: bool = True) -> str:
     if df is None or df.empty:
         return "<p>No rows.</p>"
     return df.to_html(index=False, escape=escape_html, classes="data-table")
+
+
+def _image_src(path: Path, image_src_mode: ImageSrcMode) -> str:
+    if image_src_mode == "relative":
+        return path.name
+    if image_src_mode == "cid":
+        return f"cid:{path.name}"
+    raise ValueError(f"Unsupported image source mode: {image_src_mode}")
 
 
 def render_report_html(
@@ -20,11 +32,12 @@ def render_report_html(
     events: pd.DataFrame | None = None,
     news: pd.DataFrame | None = None,
     chart_paths: dict[str, list[Path]] | None = None,
+    image_src_mode: ImageSrcMode = "relative",
 ) -> str:
     chart_sections = []
     for ticker, paths in (chart_paths or {}).items():
         images = "\n".join(
-            f'<img src="{escape(str(path.name))}" alt="{escape(ticker)} chart" loading="lazy">'
+            f'<img src="{escape(_image_src(path, image_src_mode))}" alt="{escape(ticker)} chart" loading="lazy">'
             for path in paths
         )
         chart_sections.append(f"<section><h3>{escape(ticker)}</h3><div class=\"charts\">{images}</div></section>")
@@ -42,8 +55,9 @@ def render_report_html(
     .data-table {{ border-collapse: collapse; width: 100%; margin: 1rem 0 2rem; font-size: 0.9rem; }}
     .data-table th, .data-table td {{ border: 1px solid #d9e2ec; padding: 0.45rem 0.55rem; text-align: left; }}
     .data-table th {{ background: #f0f4f8; }}
-    .charts {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem; }}
-    img {{ width: 100%; height: auto; border: 1px solid #d9e2ec; }}
+    section {{ margin-bottom: 2rem; }}
+    .charts {{ max-width: 1220px; }}
+    img {{ display: block; width: 100%; max-width: 1200px; height: auto; border: 1px solid #d9e2ec; margin: 0 0 1.25rem; }}
   </style>
 </head>
 <body>

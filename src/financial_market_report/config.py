@@ -45,6 +45,8 @@ class ScheduleSettings:
 
 @dataclass(frozen=True)
 class EmailSettings:
+    sender_email: str = ""
+    target_email: str = ""
     smtp_host: str = "smtp.gmail.com"
     smtp_port: int = 465
     use_ssl: bool = True

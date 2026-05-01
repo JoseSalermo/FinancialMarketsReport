@@ -5,7 +5,7 @@ import threading
 from pathlib import Path
 from typing import Any
 
-from flask import Flask, abort, flash, redirect, render_template, request, send_file, url_for
+from flask import Flask, abort, flash, redirect, render_template, request, send_file, send_from_directory, url_for
 
 from financial_market_report.config import DEFAULT_CONFIG_PATH, PROJECT_ROOT, load_config
 from financial_market_report.runner import run_report
@@ -21,6 +21,7 @@ from financial_market_report.storage.repository import (
     list_reports,
     list_ticker_candidates,
     update_settings,
+    delete_report_run,
 )
 from financial_market_report.vault import load_vault_config
 
@@ -41,6 +42,11 @@ SETTING_FIELDS = [
     ("report.send_email", "Send Email", "checkbox"),
     ("schedule.enabled", "Schedule Enabled", "checkbox"),
     ("schedule.run_time", "Run Time", "text"),
+    ("email.sender_email", "Sender Email", "email"),
+    ("email.target_email", "Target Email", "email"),
+    ("email.smtp_host", "SMTP Host", "text"),
+    ("email.smtp_port", "SMTP Port", "number"),
+    ("email.use_ssl", "SMTP SSL", "checkbox"),
 ]
 
 
@@ -75,6 +81,11 @@ def _default_settings_map() -> dict[str, Any]:
         "report.send_email": config.report.send_email,
         "schedule.enabled": config.schedule.enabled,
         "schedule.run_time": config.schedule.run_time,
+        "email.sender_email": config.email.sender_email,
+        "email.target_email": config.email.target_email,
+        "email.smtp_host": config.email.smtp_host,
+        "email.smtp_port": config.email.smtp_port,
+        "email.use_ssl": config.email.use_ssl,
     }
 
 
@@ -150,6 +161,22 @@ def create_app(*, db_path: str | Path | None = None) -> Flask:
         flash("Report run started. Refresh run history to see progress.")
         return redirect(url_for("runs"))
 
+    @app.post("/runs/<int:run_id>/delete")
+    def delete_run(run_id: int):
+        run = get_report_run(app.config["DB_PATH"], run_id)
+        if run is None:
+            abort(404)
+        if run["status"] == "running":
+            flash(f"Run #{run_id} is still running and cannot be removed.")
+            return redirect(url_for("runs"))
+
+        deleted = delete_report_run(app.config["DB_PATH"], run_id=run_id)
+        if deleted:
+            flash(f"Run #{run_id} removed from history. Generated files were left on disk.")
+        else:
+            flash(f"Run #{run_id} could not be removed.")
+        return redirect(url_for("runs"))
+
     @app.get("/reports")
     def reports():
         rows = list_reports(app.config["DB_PATH"], limit=50)
@@ -164,6 +191,26 @@ def create_app(*, db_path: str | Path | None = None) -> Flask:
         if path is None:
             abort(404)
         return send_file(path)
+
+    @app.get("/reports/<int:run_id>/<path:filename>")
+    def report_asset(run_id: int, filename: str):
+        requested = Path(filename)
+        if requested.name != filename:
+            abort(404)
+
+        run = get_report_run(app.config["DB_PATH"], run_id)
+        if run is None or not run["html_path"]:
+            abort(404)
+
+        report_path = _resolve_report_path(run["html_path"])
+        if report_path is None:
+            abort(404)
+
+        asset_path = report_path.parent / filename
+        if not asset_path.is_file():
+            abort(404)
+
+        return send_from_directory(report_path.parent, filename)
 
     @app.get("/settings")
     def settings():
@@ -203,7 +250,7 @@ def create_app(*, db_path: str | Path | None = None) -> Flask:
     @app.get("/secrets")
     def secrets():
         clear_secret_cache()
-        names = ["FMP_API_KEY", "NEWS_API_KEY", "SENDER_EMAIL", "TARGET_EMAIL", "GMAIL_APP_PASSWORD"]
+        names = ["FMP_API_KEY", "NEWS_API_KEY", "GMAIL_APP_PASSWORD"]
         return render_template(
             "secrets.html",
             vault_configured=load_vault_config() is not None,

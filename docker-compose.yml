@@ -17,8 +17,6 @@ services:
       VAULT_KV_MOUNT: ${VAULT_KV_MOUNT:-}
       FMP_API_KEY: ${FMP_API_KEY:-}
       NEWS_API_KEY: ${NEWS_API_KEY:-}
-      SENDER_EMAIL: ${SENDER_EMAIL:-}
-      TARGET_EMAIL: ${TARGET_EMAIL:-}
       GMAIL_APP_PASSWORD: ${GMAIL_APP_PASSWORD:-}
     volumes:
       - ./data:/app/data

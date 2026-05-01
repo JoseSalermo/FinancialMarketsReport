@@ -156,15 +156,29 @@ def run_report(
 
         if send_email:
             email_status = "failed"
-            sender_email = read_secret("SENDER_EMAIL")
-            target_email = read_secret("TARGET_EMAIL")
+            sender_email = config.email.sender_email.strip()
+            target_email = config.email.target_email.strip()
+            if not sender_email or not target_email:
+                raise ValueError("Email sender and target must be configured on the Settings page.")
             gmail_app_password = read_secret("GMAIL_APP_PASSWORD")
+            inline_chart_paths = [path for paths in chart_paths.values() for path in paths]
+            email_body_html = render_report_html(
+                title=f"Market Analysis - {report_date}",
+                generated_at=generated_at,
+                interest_table=interest_table,
+                events=events_df,
+                news=news_df,
+                chart_paths=chart_paths,
+                image_src_mode="cid",
+            )
             send_html_email_with_attachment(
                 sender_email=sender_email,
                 receiver_email=target_email,
                 subject=f"Market Analysis - {report_date}",
                 html_path=report_path,
                 app_password=gmail_app_password,
+                body_html=email_body_html,
+                inline_image_paths=inline_chart_paths,
                 summary_html=_summary_email_html(
                     report_date=report_date,
                     generated_at=generated_at,
@@ -172,6 +186,7 @@ def run_report(
                 ),
                 smtp_host=config.email.smtp_host,
                 smtp_port=config.email.smtp_port,
+                smtp_use_ssl=config.email.use_ssl,
             )
             email_sent = True
             email_status = "sent"

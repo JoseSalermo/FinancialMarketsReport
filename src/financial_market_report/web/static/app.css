@@ -116,6 +116,19 @@ button:disabled {
   cursor: not-allowed;
 }
 
+.inline-form {
+  display: inline;
+}
+
+.button-danger {
+  border-color: #7f1d1d;
+  background: var(--danger);
+}
+
+.button-danger:hover {
+  background: #7f1d1d;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -226,6 +239,7 @@ dd {
 }
 
 .settings-form input[type="text"],
+.settings-form input[type="email"],
 .settings-form input[type="number"] {
   width: 100%;
   min-height: 2.2rem;

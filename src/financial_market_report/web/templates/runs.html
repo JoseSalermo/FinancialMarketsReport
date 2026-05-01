@@ -23,6 +23,7 @@
           <th>Tickers</th>
           <th>Email</th>
           <th>Report</th>
+          <th>Cleanup</th>
         </tr>
       </thead>
       <tbody>
@@ -37,6 +38,15 @@
             <td>
               {% if run.html_path %}
                 <a href="{{ url_for('open_report', run_id=run.id) }}" target="_blank">Open</a>
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            <td>
+              {% if run.status != "running" %}
+                <form class="inline-form" method="post" action="{{ url_for('delete_run', run_id=run.id) }}" onsubmit="return confirm('Remove run #{{ run.id }} from history? Generated files will stay on disk.');">
+                  <button class="button-danger" type="submit">Remove</button>
+                </form>
               {% else %}
                 -
               {% endif %}

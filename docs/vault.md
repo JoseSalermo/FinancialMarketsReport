@@ -27,4 +27,6 @@ docker compose up -d financial-market-report
 docker compose exec -T financial-market-report financial-market-report secrets-status --include-email
 ```
 
-The app reads from Vault first. If Vault is unavailable or not configured, it falls back to environment variables and mounted files under `secrets/`.
+The app reads secrets from Vault first. If Vault is unavailable or not configured, it falls back to environment variables and mounted files under `secrets/`.
+
+Email sender and target addresses are not Vault secrets. Configure those on the app Settings page. Vault should hold credentials such as API keys and `GMAIL_APP_PASSWORD`.

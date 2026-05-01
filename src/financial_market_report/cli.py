@@ -107,7 +107,7 @@ def main(argv: list[str] | None = None) -> int:
 
         names = ["FMP_API_KEY", "NEWS_API_KEY"]
         if args.include_email:
-            names.extend(["SENDER_EMAIL", "TARGET_EMAIL", "GMAIL_APP_PASSWORD"])
+            names.append("GMAIL_APP_PASSWORD")
 
         clear_secret_cache()
         config = load_vault_config()

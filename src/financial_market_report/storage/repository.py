@@ -251,6 +251,20 @@ def get_running_report_run(db_path: str | Path | None) -> sqlite3.Row | None:
         ).fetchone()
 
 
+def delete_report_run(db_path: str | Path | None, *, run_id: int) -> bool:
+    init_db(db_path)
+    with connect(db_path) as conn:
+        cursor = conn.execute(
+            """
+            DELETE FROM report_runs
+            WHERE id = ?
+              AND status != 'running'
+            """,
+            (run_id,),
+        )
+        return cursor.rowcount > 0
+
+
 def scheduled_run_exists(db_path: str | Path | None, *, run_date: str, trigger: str = "schedule") -> bool:
     init_db(db_path)
     with connect(db_path) as conn:
