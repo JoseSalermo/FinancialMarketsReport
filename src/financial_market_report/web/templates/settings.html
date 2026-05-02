@@ -11,14 +11,28 @@
 <section class="panel">
   <form class="settings-form" method="post" action="{{ url_for('update_settings_view') }}">
     {% for field in fields %}
-      <label>
-        <span>{{ field.label }}</span>
-        {% if field.type == "checkbox" %}
+      {% if field.type == "multicheckbox" %}
+        <div class="settings-field">
+          <span>{{ field.label }}</span>
+          <div class="checkbox-group">
+            {% for option_value, option_label in field.options %}
+              <label class="checkbox-item">
+                <input type="checkbox" name="{{ field.key }}" value="{{ option_value }}" {% if option_value in field.value %}checked{% endif %}>
+                <span>{{ option_label }}</span>
+              </label>
+            {% endfor %}
+          </div>
+        </div>
+      {% else %}
+        <label>
+          <span>{{ field.label }}</span>
+          {% if field.type == "checkbox" %}
           <input type="checkbox" name="{{ field.key }}" {% if field.value %}checked{% endif %}>
-        {% else %}
+          {% else %}
           <input type="{{ field.type }}" step="any" name="{{ field.key }}" value="{{ field.value }}">
-        {% endif %}
-      </label>
+          {% endif %}
+        </label>
+      {% endif %}
     {% endfor %}
     <button type="submit">Save Settings</button>
   </form>

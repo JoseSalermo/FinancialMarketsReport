@@ -19,6 +19,18 @@ def _project_root() -> Path:
 PROJECT_ROOT = _project_root()
 DEFAULT_CONFIG_PATH = PROJECT_ROOT / "config" / "defaults.yaml"
 
+RUN_DAY_CHOICES = (
+    ("mon", "Monday"),
+    ("tue", "Tuesday"),
+    ("wed", "Wednesday"),
+    ("thu", "Thursday"),
+    ("fri", "Friday"),
+    ("sat", "Saturday"),
+    ("sun", "Sunday"),
+)
+RUN_DAY_VALUES = tuple(value for value, _label in RUN_DAY_CHOICES)
+DEFAULT_RUN_DAYS = RUN_DAY_VALUES[:5]
+
 
 @dataclass(frozen=True)
 class ReportSettings:
@@ -41,6 +53,7 @@ class ReportSettings:
 class ScheduleSettings:
     enabled: bool = False
     run_time: str = "04:00"
+    run_days: tuple[str, ...] = DEFAULT_RUN_DAYS
 
 
 @dataclass(frozen=True)
@@ -109,6 +122,43 @@ def _uses_implicit_smtp_ssl(smtp_port: int) -> bool:
     return smtp_port == 465
 
 
+def _normalize_run_days(value: Any) -> tuple[str, ...]:
+    if value is None:
+        return DEFAULT_RUN_DAYS
+
+    decoded = _decode_override_value(value)
+    if decoded is not value:
+        return _normalize_run_days(decoded)
+
+    if isinstance(value, str):
+        values = value.replace(",", " ").split()
+    elif isinstance(value, (list, tuple, set)):
+        values = list(value)
+    else:
+        return DEFAULT_RUN_DAYS
+
+    aliases = {
+        "monday": "mon",
+        "tuesday": "tue",
+        "wednesday": "wed",
+        "thursday": "thu",
+        "friday": "fri",
+        "saturday": "sat",
+        "sunday": "sun",
+    }
+    selected: set[str] = set()
+    for raw_value in values:
+        key = str(raw_value).strip().lower()
+        selected.add(aliases.get(key, key))
+
+    return tuple(day for day in RUN_DAY_VALUES if day in selected)
+
+
+def _normalize_schedule_settings(schedule: dict[str, Any]) -> dict[str, Any]:
+    schedule["run_days"] = _normalize_run_days(schedule.get("run_days"))
+    return schedule
+
+
 def _normalize_email_settings(email: dict[str, Any]) -> dict[str, Any]:
     email["smtp_port"] = int(email["smtp_port"])
     email["use_ssl"] = _uses_implicit_smtp_ssl(email["smtp_port"])
@@ -136,6 +186,7 @@ def apply_settings_overrides(config: AppConfig, flat_settings: Mapping[str, Any]
         value = _decode_override_value(raw_value)
         section[field_name] = _coerce_override_value(value, section[field_name])
 
+    schedule = _normalize_schedule_settings(schedule)
     email = _normalize_email_settings(email)
 
     return AppConfig(
@@ -149,11 +200,13 @@ def load_config(path: str | Path | None = None) -> AppConfig:
     config_path = Path(path) if path else DEFAULT_CONFIG_PATH
     data = _load_yaml(config_path)
 
+    schedule = _section(data, "schedule")
+    schedule = _normalize_schedule_settings({**asdict(ScheduleSettings()), **schedule})
     email = _section(data, "email")
     email = _normalize_email_settings({**asdict(EmailSettings()), **email})
 
     return AppConfig(
         report=ReportSettings(**_section(data, "report")),
-        schedule=ScheduleSettings(**_section(data, "schedule")),
+        schedule=ScheduleSettings(**schedule),
         email=EmailSettings(**email),
     )

@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
 
-from financial_market_report.config import AppConfig, apply_settings_overrides, load_config
+from financial_market_report.config import RUN_DAY_CHOICES, RUN_DAY_VALUES, AppConfig, apply_settings_overrides, load_config
 from financial_market_report.runner import run_report
 from financial_market_report.storage.repository import (
     get_running_report_run,
@@ -33,6 +33,11 @@ def parse_run_time(value: str) -> tuple[int, int]:
 
 def format_scheduler_datetime(value: datetime) -> str:
     return value.strftime("%Y-%m-%d %H:%M:%S %Z%z")
+
+
+def format_run_days(run_days: tuple[str, ...]) -> str:
+    labels = {value: label for value, label in RUN_DAY_CHOICES}
+    return ", ".join(labels[day] for day in run_days if day in labels)
 
 
 class ReportScheduler:
@@ -84,6 +89,9 @@ class ReportScheduler:
                 return False
 
             scheduled_at = self._scheduled_at(config, checked_at)
+            if not self._is_scheduled_day(config, scheduled_at):
+                return False
+
             if checked_at < scheduled_at:
                 return False
 
@@ -124,15 +132,15 @@ class ReportScheduler:
             now = datetime.now(tz)
             next_run_at = None
             if config.schedule.enabled:
-                next_run = self._scheduled_at(config, now)
-                if now >= next_run:
-                    next_run += timedelta(days=1)
-                next_run_at = format_scheduler_datetime(next_run)
+                next_run = self._next_scheduled_at(config, now)
+                next_run_at = format_scheduler_datetime(next_run) if next_run else None
 
             state.update(
                 {
                     "enabled": config.schedule.enabled,
                     "run_time": config.schedule.run_time,
+                    "run_days": config.schedule.run_days,
+                    "run_days_label": format_run_days(config.schedule.run_days),
                     "timezone": config.report.timezone,
                     "next_run_at": next_run_at,
                 }
@@ -142,6 +150,8 @@ class ReportScheduler:
                 {
                     "enabled": False,
                     "run_time": None,
+                    "run_days": (),
+                    "run_days_label": None,
                     "timezone": None,
                     "next_run_at": None,
                     "last_error": f"{exc.__class__.__name__}: {exc}",
@@ -167,6 +177,21 @@ class ReportScheduler:
     def _scheduled_at(self, config: AppConfig, now: datetime) -> datetime:
         hour, minute = parse_run_time(config.schedule.run_time)
         return now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+
+    def _next_scheduled_at(self, config: AppConfig, now: datetime) -> datetime | None:
+        hour, minute = parse_run_time(config.schedule.run_time)
+        for day_offset in range(8):
+            candidate_day = now + timedelta(days=day_offset)
+            candidate = candidate_day.replace(hour=hour, minute=minute, second=0, microsecond=0)
+            if candidate <= now:
+                continue
+            if self._is_scheduled_day(config, candidate):
+                return candidate
+        return None
+
+    def _is_scheduled_day(self, config: AppConfig, value: datetime) -> bool:
+        day = RUN_DAY_VALUES[value.weekday()]
+        return day in config.schedule.run_days
 
     def _already_handled(self, run_date: str) -> bool:
         with self._state_lock:

@@ -16,6 +16,12 @@ report:
 schedule:
   enabled: false
   run_time: "04:00"
+  run_days:
+    - mon
+    - tue
+    - wed
+    - thu
+    - fri
 
 email:
   sender_email: ""

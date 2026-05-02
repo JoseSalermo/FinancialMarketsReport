@@ -1,7 +1,10 @@
+import json
+
 from financial_market_report.storage.repository import (
     create_report_run,
     finish_report_run,
     get_report_run,
+    get_settings,
     list_report_runs,
     record_report,
 )
@@ -93,6 +96,17 @@ def test_settings_page_does_not_show_smtp_ssl_checkbox(tmp_path) -> None:
     assert response.status_code == 200
     assert b"SMTP SSL" not in response.data
     assert b'email.use_ssl' not in response.data
+
+
+def test_settings_page_saves_schedule_run_days(tmp_path) -> None:
+    db_path = tmp_path / "app.sqlite3"
+    client = create_app(db_path=db_path).test_client()
+
+    response = client.post("/settings", data={"schedule.run_days": ["mon", "wed", "fri"]})
+
+    settings = get_settings(db_path)
+    assert response.status_code == 302
+    assert json.loads(settings["schedule.run_days"]) == ["mon", "wed", "fri"]
 
 
 def test_clear_runs_removes_completed_runs_and_keeps_running_run(tmp_path) -> None:

@@ -18,6 +18,7 @@
       <div><dt>State</dt><dd>{{ "enabled" if scheduler_status.enabled else "disabled" }}</dd></div>
       <div><dt>Thread</dt><dd>{{ "running" if scheduler_status.thread_alive else "stopped" }}</dd></div>
       <div><dt>Run Time</dt><dd>{{ scheduler_status.run_time or "-" }}</dd></div>
+      <div><dt>Run Days</dt><dd>{{ scheduler_status.run_days_label or "-" }}</dd></div>
       <div><dt>Timezone</dt><dd>{{ scheduler_status.timezone or "-" }}</dd></div>
       <div><dt>Next Run</dt><dd>{{ scheduler_status.next_run_at or "-" }}</dd></div>
       <div><dt>Last Check</dt><dd>{{ scheduler_status.last_checked_at or "-" }}</dd></div>

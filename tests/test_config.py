@@ -24,3 +24,17 @@ def test_email_ssl_mode_is_inferred_from_smtp_port() -> None:
 
     assert starttls.email.use_ssl is False
     assert implicit_ssl.email.use_ssl is True
+
+
+def test_schedule_run_days_default_to_weekdays() -> None:
+    config = load_config()
+
+    assert config.schedule.run_days == ("mon", "tue", "wed", "thu", "fri")
+
+
+def test_schedule_run_days_can_be_overridden() -> None:
+    config = load_config()
+
+    updated = apply_settings_overrides(config, {"schedule.run_days": '["mon", "wed", "sunday"]'})
+
+    assert updated.schedule.run_days == ("mon", "wed", "sun")

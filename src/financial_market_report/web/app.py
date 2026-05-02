@@ -7,7 +7,7 @@ from typing import Any
 
 from flask import Flask, abort, flash, redirect, render_template, request, send_file, send_from_directory, url_for
 
-from financial_market_report.config import DEFAULT_CONFIG_PATH, PROJECT_ROOT, load_config
+from financial_market_report.config import DEFAULT_CONFIG_PATH, PROJECT_ROOT, RUN_DAY_CHOICES, load_config
 from financial_market_report.runner import run_report
 from financial_market_report.scheduler import ReportScheduler
 from financial_market_report.secrets import clear_secret_cache, secret_status, vault_error
@@ -43,6 +43,7 @@ SETTING_FIELDS = [
     ("report.send_email", "Send Email", "checkbox"),
     ("schedule.enabled", "Schedule Enabled", "checkbox"),
     ("schedule.run_time", "Run Time", "text"),
+    ("schedule.run_days", "Run Days", "multicheckbox"),
     ("email.sender_email", "Sender Email", "email"),
     ("email.target_email", "Target Email", "email"),
     ("email.smtp_host", "SMTP Host", "text"),
@@ -81,6 +82,7 @@ def _default_settings_map() -> dict[str, Any]:
         "report.send_email": config.report.send_email,
         "schedule.enabled": config.schedule.enabled,
         "schedule.run_time": config.schedule.run_time,
+        "schedule.run_days": config.schedule.run_days,
         "email.sender_email": config.email.sender_email,
         "email.target_email": config.email.target_email,
         "email.smtp_host": config.email.smtp_host,
@@ -233,6 +235,7 @@ def create_app(*, db_path: str | Path | None = None) -> Flask:
                 "label": label,
                 "type": field_type,
                 "value": _field_value(stored, key, defaults.get(key)),
+                "options": RUN_DAY_CHOICES if key == "schedule.run_days" else (),
             }
             for key, label, field_type in SETTING_FIELDS
         ]
@@ -245,6 +248,8 @@ def create_app(*, db_path: str | Path | None = None) -> Flask:
         for key, _label, field_type in SETTING_FIELDS:
             if field_type == "checkbox":
                 values[key] = key in request.form
+            elif field_type == "multicheckbox":
+                values[key] = request.form.getlist(key)
             elif key in request.form:
                 raw = request.form[key].strip()
                 default = defaults.get(key)
