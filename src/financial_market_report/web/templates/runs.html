@@ -6,9 +6,14 @@
     <h1>Run History</h1>
     <p class="muted">Each scheduled or manual execution is recorded here.</p>
   </div>
-  <form method="post" action="{{ url_for('run_now') }}">
-    <button type="submit">Run Now</button>
-  </form>
+  <div class="actions">
+    <form method="post" action="{{ url_for('run_now') }}">
+      <button type="submit">Run Now</button>
+    </form>
+    <form method="post" action="{{ url_for('clear_runs') }}" onsubmit="return confirm('Remove all completed runs from history and reset the scheduler marker? Generated files will stay on disk.');">
+      <button class="button-danger" type="submit">Clear Completed</button>
+    </form>
+  </div>
 </section>
 
 <section class="panel">

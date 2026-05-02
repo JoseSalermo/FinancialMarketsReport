@@ -150,6 +150,12 @@ class ReportScheduler:
 
         return state
 
+    def clear_last_run_date(self) -> str | None:
+        with self._state_lock:
+            previous = self._last_run_date
+            self._last_run_date = None
+            return previous
+
     def _loop(self) -> None:
         while not self._stop_event.is_set():
             self.tick()

@@ -48,8 +48,8 @@ class EmailSettings:
     sender_email: str = ""
     target_email: str = ""
     smtp_host: str = "smtp.gmail.com"
-    smtp_port: int = 465
-    use_ssl: bool = True
+    smtp_port: int = 587
+    use_ssl: bool = False
 
 
 @dataclass(frozen=True)
@@ -105,6 +105,16 @@ def _coerce_override_value(value: Any, default: Any) -> Any:
     return value
 
 
+def _uses_implicit_smtp_ssl(smtp_port: int) -> bool:
+    return smtp_port == 465
+
+
+def _normalize_email_settings(email: dict[str, Any]) -> dict[str, Any]:
+    email["smtp_port"] = int(email["smtp_port"])
+    email["use_ssl"] = _uses_implicit_smtp_ssl(email["smtp_port"])
+    return email
+
+
 def apply_settings_overrides(config: AppConfig, flat_settings: Mapping[str, Any]) -> AppConfig:
     report = asdict(config.report)
     schedule = asdict(config.schedule)
@@ -126,6 +136,8 @@ def apply_settings_overrides(config: AppConfig, flat_settings: Mapping[str, Any]
         value = _decode_override_value(raw_value)
         section[field_name] = _coerce_override_value(value, section[field_name])
 
+    email = _normalize_email_settings(email)
+
     return AppConfig(
         report=ReportSettings(**report),
         schedule=ScheduleSettings(**schedule),
@@ -137,8 +149,11 @@ def load_config(path: str | Path | None = None) -> AppConfig:
     config_path = Path(path) if path else DEFAULT_CONFIG_PATH
     data = _load_yaml(config_path)
 
+    email = _section(data, "email")
+    email = _normalize_email_settings({**asdict(EmailSettings()), **email})
+
     return AppConfig(
         report=ReportSettings(**_section(data, "report")),
         schedule=ScheduleSettings(**_section(data, "schedule")),
-        email=EmailSettings(**_section(data, "email")),
+        email=EmailSettings(**email),
     )

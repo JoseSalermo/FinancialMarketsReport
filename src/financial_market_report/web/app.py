@@ -20,6 +20,7 @@ from financial_market_report.storage.repository import (
     list_report_runs,
     list_reports,
     list_ticker_candidates,
+    delete_completed_report_runs,
     update_settings,
     delete_report_run,
 )
@@ -46,7 +47,6 @@ SETTING_FIELDS = [
     ("email.target_email", "Target Email", "email"),
     ("email.smtp_host", "SMTP Host", "text"),
     ("email.smtp_port", "SMTP Port", "number"),
-    ("email.use_ssl", "SMTP SSL", "checkbox"),
 ]
 
 
@@ -85,7 +85,6 @@ def _default_settings_map() -> dict[str, Any]:
         "email.target_email": config.email.target_email,
         "email.smtp_host": config.email.smtp_host,
         "email.smtp_port": config.email.smtp_port,
-        "email.use_ssl": config.email.use_ssl,
     }
 
 
@@ -175,6 +174,18 @@ def create_app(*, db_path: str | Path | None = None) -> Flask:
             flash(f"Run #{run_id} removed from history. Generated files were left on disk.")
         else:
             flash(f"Run #{run_id} could not be removed.")
+        return redirect(url_for("runs"))
+
+    @app.post("/runs/clear")
+    def clear_runs():
+        removed_count = delete_completed_report_runs(app.config["DB_PATH"])
+        scheduler = app.config.get("SCHEDULER")
+        if scheduler is not None:
+            scheduler.clear_last_run_date()
+        flash(
+            f"Removed {removed_count} completed run"
+            f"{'' if removed_count == 1 else 's'} from history. Generated files were left on disk."
+        )
         return redirect(url_for("runs"))
 
     @app.get("/reports")

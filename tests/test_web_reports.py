@@ -1,4 +1,10 @@
-from financial_market_report.storage.repository import create_report_run, finish_report_run, get_report_run, record_report
+from financial_market_report.storage.repository import (
+    create_report_run,
+    finish_report_run,
+    get_report_run,
+    list_report_runs,
+    record_report,
+)
 from financial_market_report.web.app import create_app
 
 
@@ -77,3 +83,50 @@ def test_delete_run_keeps_running_run(tmp_path) -> None:
 
     assert response.status_code == 302
     assert get_report_run(db_path, run_id) is not None
+
+
+def test_settings_page_does_not_show_smtp_ssl_checkbox(tmp_path) -> None:
+    client = create_app(db_path=tmp_path / "app.sqlite3").test_client()
+
+    response = client.get("/settings")
+
+    assert response.status_code == 200
+    assert b"SMTP SSL" not in response.data
+    assert b'email.use_ssl' not in response.data
+
+
+def test_clear_runs_removes_completed_runs_and_keeps_running_run(tmp_path) -> None:
+    db_path = tmp_path / "app.sqlite3"
+    completed_id = create_report_run(db_path, started_at="2026-05-01 00:00:00 EDT-0400", params={})
+    finish_report_run(
+        db_path,
+        run_id=completed_id,
+        status="succeeded",
+        finished_at="2026-05-01 00:01:00 EDT-0400",
+    )
+    running_id = create_report_run(db_path, started_at="2026-05-01 00:02:00 EDT-0400", params={})
+    client = create_app(db_path=db_path).test_client()
+
+    response = client.post("/runs/clear")
+
+    rows = list_report_runs(db_path, limit=10)
+    assert response.status_code == 302
+    assert [row["id"] for row in rows] == [running_id]
+
+
+def test_clear_runs_resets_scheduler_marker(tmp_path) -> None:
+    class FakeScheduler:
+        def __init__(self) -> None:
+            self.cleared = False
+
+        def clear_last_run_date(self) -> None:
+            self.cleared = True
+
+    app = create_app(db_path=tmp_path / "app.sqlite3")
+    scheduler = FakeScheduler()
+    app.config["SCHEDULER"] = scheduler
+
+    response = app.test_client().post("/runs/clear")
+
+    assert response.status_code == 302
+    assert scheduler.cleared is True

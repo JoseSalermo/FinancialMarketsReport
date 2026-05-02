@@ -70,6 +70,14 @@ main {
   margin-bottom: 1rem;
 }
 
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
 h1,
 h2 {
   margin: 0 0 0.4rem;
@@ -257,7 +265,8 @@ dd {
 
 @media (max-width: 720px) {
   .topbar,
-  .header-row {
+  .header-row,
+  .actions {
     flex-direction: column;
     align-items: stretch;
   }
