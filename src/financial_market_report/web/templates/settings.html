@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+<section class="header-row">
+  <div>
+    <h1>Settings</h1>
+    <p class="muted">Editable values are stored in SQLite and used by future runs that point at this database.</p>
+  </div>
+</section>
+
+<section class="panel">
+  <form class="settings-form" method="post" action="{{ url_for('update_settings_view') }}">
+    {% for field in fields %}
+      <label>
+        <span>{{ field.label }}</span>
+        {% if field.type == "checkbox" %}
+          <input type="checkbox" name="{{ field.key }}" {% if field.value %}checked{% endif %}>
+        {% else %}
+          <input type="{{ field.type }}" step="any" name="{{ field.key }}" value="{{ field.value }}">
+        {% endif %}
+      </label>
+    {% endfor %}
+    <button type="submit">Save Settings</button>
+  </form>
+</section>
+{% endblock %}

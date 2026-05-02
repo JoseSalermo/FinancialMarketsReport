@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Runs{% endblock %}
+{% block content %}
+<section class="header-row">
+  <div>
+    <h1>Run History</h1>
+    <p class="muted">Each scheduled or manual execution is recorded here.</p>
+  </div>
+  <div class="actions">
+    <form method="post" action="{{ url_for('run_now') }}">
+      <button type="submit">Run Now</button>
+    </form>
+    <form method="post" action="{{ url_for('clear_runs') }}" onsubmit="return confirm('Remove all completed runs from history and reset the scheduler marker? Generated files will stay on disk.');">
+      <button class="button-danger" type="submit">Clear Completed</button>
+    </form>
+  </div>
+</section>
+
+<section class="panel">
+  {% if runs %}
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Status</th>
+          <th>Started</th>
+          <th>Finished</th>
+          <th>Tickers</th>
+          <th>Email</th>
+          <th>Report</th>
+          <th>Cleanup</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for run in runs %}
+          <tr>
+            <td><a href="{{ url_for('run_detail', run_id=run.id) }}">#{{ run.id }}</a></td>
+            <td><span class="badge status-{{ run.status }}">{{ run.status }}</span></td>
+            <td>{{ run.started_at }}</td>
+            <td>{{ run.finished_at or "-" }}</td>
+            <td>{{ run.ticker_count }}</td>
+            <td>{{ run.email_status or "not_recorded" }}</td>
+            <td>
+              {% if run.html_path %}
+                <a href="{{ url_for('open_report', run_id=run.id) }}" target="_blank">Open</a>
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            <td>
+              {% if run.status != "running" %}
+                <form class="inline-form" method="post" action="{{ url_for('delete_run', run_id=run.id) }}" onsubmit="return confirm('Remove run #{{ run.id }} from history? Generated files will stay on disk.');">
+                  <button class="button-danger" type="submit">Remove</button>
+                </form>
+              {% else %}
+                -
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No runs recorded.</p>
+  {% endif %}
+</section>
+{% endblock %}

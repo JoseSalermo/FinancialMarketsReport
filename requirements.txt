@@ -16,9 +16,11 @@ defusedxml==0.7.1
 et-xmlfile==1.1.0
 executing==2.1.0
 fastjsonschema==2.21.2
+Flask>=3.1
 fonttools==4.55.3
 frozendict==2.4.6
 html5lib==1.1
+hvac>=2.3
 idna==3.10
 ipykernel==6.29.5
 ipython==8.28.0
@@ -60,6 +62,7 @@ pure_eval==0.2.3
 pycparser==2.23
 Pygments==2.18.0
 pyparsing==3.2.1
+PyYAML>=6.0
 python-dateutil==2.9.0.post0
 pytz==2024.2
 pyzmq==26.2.0

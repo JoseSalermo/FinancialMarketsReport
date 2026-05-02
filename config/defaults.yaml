@@ -18,6 +18,8 @@ schedule:
   run_time: "04:00"
 
 email:
+  sender_email: ""
+  target_email: ""
   smtp_host: smtp.gmail.com
-  smtp_port: 465
-  use_ssl: true
+  smtp_port: 587
+  use_ssl: false

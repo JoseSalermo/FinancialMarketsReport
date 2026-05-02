@@ -1,0 +1,278 @@
+:root {
+  --bg: #f5f7fa;
+  --surface: #ffffff;
+  --line: #d8dee8;
+  --text: #18212f;
+  --muted: #697586;
+  --accent: #16697a;
+  --accent-strong: #0b4f5c;
+  --danger: #a32929;
+  --success: #256f3a;
+  --warn: #8a5a00;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Aptos", "Segoe UI", sans-serif;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 0.85rem 1.5rem;
+  background: #12232e;
+  color: white;
+}
+
+.brand {
+  color: white;
+  font-weight: 700;
+}
+
+.topbar nav {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.topbar nav a {
+  color: #dbe8ee;
+  font-size: 0.95rem;
+}
+
+main {
+  width: min(1180px, calc(100vw - 2rem));
+  margin: 1.5rem auto 3rem;
+}
+
+.header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+h1,
+h2 {
+  margin: 0 0 0.4rem;
+}
+
+.muted {
+  color: var(--muted);
+  margin: 0;
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+button,
+.button-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.25rem;
+  padding: 0.45rem 0.85rem;
+  border: 1px solid var(--accent-strong);
+  border-radius: 4px;
+  background: var(--accent);
+  color: white;
+  font: inherit;
+  cursor: pointer;
+}
+
+.button-link:hover,
+button:hover {
+  background: var(--accent-strong);
+  text-decoration: none;
+}
+
+button:disabled {
+  border-color: var(--line);
+  background: #cbd5df;
+  color: #52616f;
+  cursor: not-allowed;
+}
+
+.inline-form {
+  display: inline;
+}
+
+.button-danger {
+  border-color: #7f1d1d;
+  background: var(--danger);
+}
+
+.button-danger:hover {
+  background: #7f1d1d;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+th,
+td {
+  border-bottom: 1px solid var(--line);
+  padding: 0.55rem 0.45rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  color: var(--muted);
+  font-weight: 650;
+  background: #f8fafc;
+}
+
+.path {
+  max-width: 360px;
+  overflow-wrap: anywhere;
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.stats div {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 0.65rem;
+}
+
+dt {
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+
+dd {
+  margin: 0.25rem 0 0;
+  font-weight: 650;
+}
+
+.badge {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.82rem;
+  font-weight: 650;
+  background: #edf2f7;
+}
+
+.status-succeeded {
+  background: #e3f4e8;
+  color: var(--success);
+}
+
+.status-failed {
+  background: #fbe8e8;
+  color: var(--danger);
+}
+
+.status-running {
+  background: #fff3cf;
+  color: var(--warn);
+}
+
+.error {
+  white-space: pre-wrap;
+  background: #fff1f1;
+  color: var(--danger);
+  border: 1px solid #f5c2c2;
+  border-radius: 4px;
+  padding: 0.75rem;
+}
+
+.messages {
+  margin-bottom: 1rem;
+}
+
+.message {
+  padding: 0.65rem 0.85rem;
+  border: 1px solid #b9d6df;
+  border-radius: 4px;
+  background: #ecf7fa;
+}
+
+.settings-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.settings-form label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--muted);
+  font-weight: 650;
+}
+
+.settings-form input[type="text"],
+.settings-form input[type="email"],
+.settings-form input[type="number"] {
+  width: 100%;
+  min-height: 2.2rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 0.4rem 0.55rem;
+  font: inherit;
+  color: var(--text);
+}
+
+.settings-form input[type="checkbox"] {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+@media (max-width: 720px) {
+  .topbar,
+  .header-row,
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  table {
+    display: block;
+    overflow-x: auto;
+  }
+}

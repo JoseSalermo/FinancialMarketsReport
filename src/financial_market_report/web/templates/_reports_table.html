@@ -1,0 +1,30 @@
+{% if reports %}
+  <table>
+    <thead>
+      <tr>
+        <th>Run</th>
+        <th>Date</th>
+        <th>Status</th>
+        <th>Tickers</th>
+        <th>Email</th>
+        <th>Path</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for report in reports %}
+        <tr>
+          <td><a href="{{ url_for('run_detail', run_id=report.run_id) }}">#{{ report.run_id }}</a></td>
+          <td>{{ report.report_date }}</td>
+          <td><span class="badge status-{{ report.status }}">{{ report.status }}</span></td>
+          <td>{{ report.ticker_count }}</td>
+          <td>{{ report.email_status }}</td>
+          <td class="path">{{ report.html_path }}</td>
+          <td><a href="{{ url_for('open_report', run_id=report.run_id) }}" target="_blank">Open</a></td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p>No reports recorded.</p>
+{% endif %}

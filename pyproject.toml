@@ -8,10 +8,28 @@ version = "0.1.0"
 description = "Internal financial market report generator and web control app"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "Flask>=3.1",
+    "matplotlib>=3.10",
+    "hvac>=2.3",
+    "mplfinance>=0.12.10b0",
+    "nbconvert>=7.16",
+    "nbformat>=5.10",
+    "pandas>=2.2",
+    "PyYAML>=6.0",
+    "requests>=2.32",
+    "tzdata>=2024.2",
+    "yfinance>=0.2.66",
+]
+
+[project.scripts]
+financial-market-report = "financial_market_report.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+financial_market_report = ["web/templates/*.html", "web/static/*.css"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
