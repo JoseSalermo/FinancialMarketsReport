@@ -30,7 +30,3 @@ logs/*
 # Generated notebook/report artifacts
 *.nbconvert.ipynb
 Outputs/
-
-# Keep the current notebook out of Git until it is sanitized.
-FinMarketsNotebook.ipynb
-notebooks/legacy/*.ipynb
